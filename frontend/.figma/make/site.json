@@ -1,0 +1,10 @@
+{
+  "description": "Explore bicycle rental demand forecasts, historical trends, and machine learning performance for Washington, D.C., supporting smarter planning and academic analysis.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}

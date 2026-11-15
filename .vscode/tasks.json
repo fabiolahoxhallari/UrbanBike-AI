@@ -1,0 +1,45 @@
+{
+  // Terminal > Run Task... > "UrbanBike: Start full app (dev)"
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "UrbanBike: Backend API (Python, port 8001)",
+      "type": "shell",
+      "command": "${command:python.interpreterPath}",
+      "args": ["api_server.py"],
+      "options": { "cwd": "${workspaceFolder}" },
+      "isBackground": true,
+      "problemMatcher": { "pattern": { "regexp": "^x^" }, "background": { "activesBegin": true, "beginsPattern": "UrbanBike AI API", "endsPattern": "Ctrl\\+C" } }
+    },
+    {
+      "label": "UrbanBike: Frontend (Vite, port 5173)",
+      "type": "shell",
+      "command": "npm run dev",
+      "options": { "cwd": "${workspaceFolder}/frontend" },
+      "isBackground": true,
+      "problemMatcher": { "pattern": { "regexp": "^x^" }, "background": { "activesBegin": true, "beginsPattern": "VITE", "endsPattern": "Local:" } }
+    },
+    {
+      "label": "UrbanBike: Start full app (dev)",
+      "dependsOn": ["UrbanBike: Backend API (Python, port 8001)", "UrbanBike: Frontend (Vite, port 5173)"],
+      "problemMatcher": []
+    },
+    {
+      "label": "UrbanBike: Original app.py (port 8000)",
+      "type": "shell",
+      "command": "${command:python.interpreterPath}",
+      "args": ["app.py"],
+      "options": { "cwd": "${workspaceFolder}" },
+      "isBackground": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "UrbanBike: Test integration",
+      "type": "shell",
+      "command": "${command:python.interpreterPath}",
+      "args": ["test_integration.py"],
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": []
+    }
+  ]
+}

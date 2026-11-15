@@ -1,0 +1,13 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "UrbanBike: Debug API (api_server.py)",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/api_server.py",
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal"
+    }
+  ]
+}
