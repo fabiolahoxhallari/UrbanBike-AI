@@ -1,94 +1,479 @@
-# Raporti i studentit: UrbanBike AI
+# RAPORTI PËRFUNDIMTAR I PROJEKTIT
+# URBANBIKE AI
+### Parashikimi i kërkesës ditore për biçikleta me Inteligjencë Artificiale
 
-Studenti: [PLOTËSO: Emri Mbiemri]
-Grupi (nëse punohet në grup): [PLOTËSO ose shkruaj "punë individuale"]
-Data: [PLOTËSO: data e dorëzimit]
-GitHub-i im: [PLOTËSO: URL e repozitorit tënd privat, pas publikimit]
-Figma: [PLOTËSO: lidhja Share → Copy link e skedarit tënd Figma]
+**UNIVERSITETI POLIS**
 
-## Qëllimi
+**Lënda:** Inteligjenca Artificiale
 
-Problemi që zgjidhim: Sa qira biçikletash priten për ditën pasuese në Washington, D.C.? (Sistemi Capital Bikeshare, të dhëna historike 2011–2012.)
+**Pedagogu:** Prof. Asst. Dr. Sc. Besart Hyseni
 
-Target-i y: `rentals` = numri total i qirave në një ditë (kolona `cnt` e UCI Bike Sharing, e riemërtuar).
+**Studentja:** Fabiola Hoxhallari
 
-Predictorët X:
-- Numerikë: `rentals_lag1` (qiratë e djeshme), `rentals_lag7` (qiratë 7 ditë më parë), `rentals_mean7` (mesatarja e 7 ditëve të kaluara, pa ditën aktuale), `temp_c_lag7`, `rain_mm_lag7`, `wind_ms_lag7` (moti NASA 7 ditë më parë), `trend_days` (numri i ditëve nga fillimi i serisë).
-- Kategorikë: `weekday`, `month`, `workingday`, `holiday` (kalendari).
-- Nuk përdoren `casual`, `registered` dhe `cnt` të ditës së synuar, sepse `casual + registered = cnt` do ta zbulonte përgjigjen (rrjedhje informacioni).
+**Forma e realizimit:** Punë individuale
 
-Koha kur parashikojmë dhe çfarë informacioni është i njohur: Parashikojmë në fillim të ditës t. E njohim kalendarin e ditës t, qiratë e ditëve t−1 dhe t−7 dhe motin e ditës t−7. Nuk e njohim numrin real të qirave të ditës t. Supozimi kryesor është se qiratë e ditës së djeshme janë të disponueshme në atë çast. Ky është një simulim historik njëditor, jo një shërbim që ka parashikuar kërkesën reale të sotme.
+**Viti akademik:** 2026–2027
 
-## Pastrimi
+**Data:** 15.11.2026
 
-Burimet reale dhe çelësi i bashkimit: UCI Bike Sharing (`data/raw/day.csv`, 731 ditë) dhe NASA POWER (`data/raw/nasa_weather.csv`, 731 ditë; temperatura në °C, reshjet në mm/ditë, era në m/s). Bashkimi bëhet sipas datës (`date`), me kontroll `one_to_one`: çdo datë shfaqet saktësisht një herë në të dyja burimet.
+**GitHub:** https://github.com/fabiolahoxhallari/UrbanBike-AI
 
-Dallimi mes origjinaleve dhe kopjes didaktike: Skedarët origjinalë nuk kishin mungesa dhe as dublime (0 mungesa te UCI; hash-et përputhen me `provenance.json`) dhe nuk u ndryshuan. Problemet u shtuan qëllimisht vetëm në kopjen e ushtrimit `data/teaching/dirty.csv`, me fara fikse 42: 18 vlera që mungojnë te `temp_c`, 12 te `rain_mm`, 6 tekste "gabim" te `temp_c` dhe 12 rreshta të dublikuar.
+**Figma:** https://www.figma.com/make/accrfVOHPwpXQgrudI3nQ4/UrbanBike-AI-Dashboard
 
-Rreshtat para/pas: 743 rreshta në kopjen didaktike, 731 pas pastrimit. Pas krijimit të lag-eve, 7 ditët e para hiqen sepse nuk kanë histori të plotë, kështu që `model_data.csv` ka 724 rreshta.
+---
 
-Dublimet: 12 rreshta identikë u gjetën me `duplicated()` dhe u hoqën me `drop_duplicates()`. Pas heqjes, çdo datë është unike dhe datat ndjekin njëra-tjetrën pa boshllëqe (kontrolluar me `assert`).
+## 1. HYRJE
 
-Mungesat para/pas konvertimit: Para konvertimit kishte 30 qeliza bosh (18 te `temp_c`, 12 te `rain_mm`), ndërsa 6 vlerat "gabim" ishin tekst. Pas `pd.to_numeric(errors="coerce")`, teksti kthehet në NaN dhe mungesat meteorologjike bëhen 36. Tipet ndryshojnë: `date` kthehet në datë dhe `temp_c` nga tekst në numër me presje dhjetore (float64).
+Inteligjenca Artificiale (AI) dhe Machine Learning po përdoren gjithnjë e më shumë për analizimin e të dhënave historike dhe parashikimin e situatave të ardhshme. Një ndër fushat ku këto teknologji mund të japin rezultate të dobishme është transporti urban, veçanërisht sistemet e marrjes me qira të biçikletave.
 
-Arsyeja e imputimit vetëm me train: Mungesat plotësohen brenda `Pipeline` me medianën e mësuar vetëm nga periudha train (`SimpleImputer`). Nëse medianën e llogaritnim nga i gjithë dataset-i, informacion nga validation dhe test do të hynte në përgatitje dhe rezultati do të dukej më i mirë se sa është në të vërtetë (rrjedhje informacioni). Një mungesë nuk trajtohet si 0°C, sepse zero është matje reale dhe do ta ndryshonte kuptimin e temperaturës.
+Projekti **UrbanBike AI** është një aplikacion demonstrues që përdor të dhëna historike për të parashikuar numrin e qirave të biçikletave gjatë një dite të caktuar në Washington, D.C., SHBA.
 
-## Grafikët
+Projekti bazohet në të dhënat e sistemit Capital Bikeshare për periudhën 2011–2012, të kombinuara me informacione meteorologjike nga NASA POWER.
 
-Të gjithë grafikët përdorin vetëm periudhën train (2011-01-08 deri 2012-04-30). Testi nuk përdoret për eksplorim.
+Nëpërmjet përpunimit të të dhënave, analizës eksploruese, trajnimit të algoritmeve të Machine Learning dhe zhvillimit të një ndërfaqeje grafike, projekti demonstron procesin e ndërtimit të një sistemi parashikues.
 
-Vëzhgimi 1 dhe figura përkatëse (`reports/figures/01_demand.png`): Kërkesa rritet nga fillimi i 2011 (rreth 1000–2000 qira/ditë) drejt verës 2011 (rreth 4000–5000), bie gjatë dimrit 2011–2012 dhe rritet përsëri në pranverën 2012, ku arrin vlera mbi 6000. Ka edhe luhatje të forta ditore rreth mesatares 7-ditore. Kjo tregon sezonalitet dhe një prirje rritëse të përgjithshme, prandaj modeli përdor `month` dhe `trend_days`.
+UrbanBike AI ka karakter akademik dhe demonstrues. Ai nuk është një shërbim i testuar për parashikimin e kërkesës aktuale në kohë reale.
 
-Vëzhgimi 2 dhe figura përkatëse (`reports/figures/03_weather.png`): Temperatura 7 ditë më parë ka lidhje pozitive me qiratë e ditës (korrelacioni në train është 0.54). Lidhja dobësohet mbi rreth 20°C, ku qiratë qëndrojnë kryesisht midis 3500 dhe 5500.
+## 2. QËLLIMI DHE OBJEKTIVAT
 
-Vëzhgim shtesë (`reports/figures/02_workingday.png`): Mesatarja në ditë pune është 3761 qira dhe në fundjavë/festë 3570 qira. Diferenca është e vogël (rreth 5%), dhe mesatarja nuk përshkruan gjithë shpërndarjen.
+### 2.1 Qëllimi kryesor
 
-Pse një lidhje e dukshme nuk provon shkakësi: Temperatura lidhet edhe me stinën dhe me kohën. Qiratë rriten gjithashtu për shkak të rritjes së sistemit nga viti 2011 në 2012, jo vetëm nga moti. Një faktor i tretë i përbashkët mund ta krijojë lidhjen, dhe një grafik pikash tregon vetëm bashkëlidhje. Për shkakësi nevojitet një dizajn tjetër (p.sh. kontroll për stinën dhe prirjen).
+Qëllimi kryesor është zhvillimi dhe testimi i një modeli të Inteligjencës Artificiale që parashikon kërkesën ditore për biçikleta, duke përdorur historikun e qirave, karakteristikat kalendarike dhe të dhënat meteorologjike.
 
-## Vlerësimi
+Pyetja kryesore e projektit është:
 
-Ndarja kronologjike: train 2011-01-08 – 2012-04-30 (479 ditë), validation 2012-05-01 – 2012-08-31 (123 ditë), test 2012-09-01 – 2012-12-31 (122 ditë). Parashikimi është njëditor, me qiratë e ditëve të kaluara të njohura. Metrikat MAE dhe RMSE maten në qira për ditë.
+**Sa qira biçikletash priten për një ditë të caktuar, duke u bazuar në informacionin e disponueshëm përpara fillimit të saj?**
+
+### 2.2 Objektivat specifike
+
+- Grumbullimi dhe integrimi i të dhënave nga burime të besueshme.
+- Pastrimi dhe përgatitja e të dhënave për analizë.
+- Identifikimi i tendencave dhe faktorëve të lidhur me kërkesën.
+- Ndërtimi dhe krahasimi i modeleve parashikuese.
+- Vlerësimi i performancës me metrika statistikore.
+- Realizimi i një detyre shtesë klasifikimi.
+- Krijimi i një ndërfaqeje grafike për paraqitjen e rezultateve.
+- Dokumentimi i metodologjisë, kufizimeve dhe kontributit individual.
+
+## 3. TEKNOLOGJITË E PËRDORURA
+
+Projekti kombinon teknologji për analizën e të dhënave, Machine Learning, zhvillimin e aplikacioneve dhe menaxhimin e kodit.
+
+| Teknologjia | Përdorimi |
+|---|---|
+| Python | Përpunimi i të dhënave dhe ekzekutimi i modeleve |
+| pandas | Leximi, bashkimi dhe pastrimi i të dhënave |
+| NumPy | Operacione numerike |
+| Matplotlib | Vizualizimi i rezultateve |
+| scikit-learn | Trajnimi dhe vlerësimi i modeleve |
+| Visual Studio Code | Mjedisi i zhvillimit |
+| React dhe TypeScript | Ndërtimi i ndërfaqes |
+| Vite | Ekzekutimi lokal i frontend-it |
+| Figma Make | Konceptimi dhe gjenerimi i ndërfaqes |
+| Git dhe GitHub | Versionimi dhe publikimi i kodit |
+
+Arkitektura e aplikacionit përfshin një pjesë backend në Python dhe një pjesë frontend në React. Komunikimi realizohet përmes kërkesave HTTP drejt API-së së aplikacionit.
+
+## 4. BURIMET E TË DHËNAVE
+
+### 4.1 UCI Bike Sharing Dataset
+
+Burimi kryesor është **Bike Sharing Dataset**, i publikuar në UCI Machine Learning Repository.
+
+Ai përmban të dhëna historike për numrin e biçikletave të marra me qira në sistemin Capital Bikeshare në Washington, D.C., gjatë viteve 2011 dhe 2012.
+
+Në projekt përdoret skedari `day.csv`, me 731 regjistrime ditore.
+
+Variabla që synohet të parashikohet është:
+
+`rentals = cnt`
+
+Kjo përfaqëson numrin total të qirave të biçikletave gjatë një dite.
+
+### 4.2 NASA POWER
+
+Burimi i dytë është NASA POWER, i përdorur për të dhënat meteorologjike.
+
+Informacionet përfshijnë temperaturën, reshjet dhe shpejtësinë e erës.
+
+Të dhënat meteorologjike ruhen në skedarin:
+
+`data/raw/nasa_weather.csv`
+
+### 4.3 Integrimi i burimeve
+
+Të dyja burimet përmbajnë nga 731 regjistrime ditore dhe bashkohen sipas datës.
+
+Për bashkimin përdoret një kontroll i marrëdhënies `one_to_one`, për të garantuar që çdo datë përfaqësohet vetëm një herë në secilin burim.
+
+Skedarët origjinalë ruhen të pandryshuar, duke mundësuar gjurmueshmërinë e të dhënave.
+
+## 5. PËRCAKTIMI I VARIABLAVE
+
+### 5.1 Variabla e synuar
+
+Variabla e varur është `rentals`, numri total i qirave ditore.
+
+Detyra kryesore përbën një problem **regresioni**, sepse rezultati është një vlerë numerike.
+
+### 5.2 Variablat parashikuese
+
+Variablat numerike:
+
+- `rentals_lag1` – qiratë e ditës së mëparshme.
+- `rentals_lag7` – qiratë shtatë ditë më parë.
+- `rentals_mean7` – mesatarja e shtatë ditëve të mëparshme.
+- `temp_c_lag7` – temperatura shtatë ditë më parë.
+- `rain_mm_lag7` – reshjet shtatë ditë më parë.
+- `wind_ms_lag7` – shpejtësia e erës shtatë ditë më parë.
+- `trend_days` – numri i ditëve nga fillimi i periudhës së analizuar.
+
+Variablat kategorike:
+
+- `weekday` – dita e javës.
+- `month` – muaji.
+- `workingday` – tregues i ditës së punës.
+- `holiday` – tregues i ditës së festës.
+
+### 5.3 Parandalimi i rrjedhjes së informacionit
+
+Kolonat `casual`, `registered` dhe `cnt` të ditës që parashikohet nuk përdoren si variabla hyrëse.
+
+Arsyeja është se shuma e përdoruesve rastësorë dhe atyre të regjistruar është e barabartë me numrin total të qirave. Përdorimi i tyre do t'i jepte modelit informacionin që duhet të parashikojë.
+
+Modeli supozon se në fillim të ditës së synuar janë të njohura qiratë e ditëve të mëparshme dhe karakteristikat kalendarike.
+
+## 6. PASTRIMI DHE PËRGATITJA E TË DHËNAVE
+
+Pastrimi është një fazë e rëndësishme, sepse cilësia e të dhënave ndikon drejtpërdrejt në performancën e modelit.
+
+### 6.1 Krijimi i kopjes didaktike
+
+Të dhënat origjinale nuk përmbanin mungesa apo dublime. Për të demonstruar procesin e pastrimit, u krijua një kopje didaktike me probleme të shtuara qëllimisht.
+
+Në këtë kopje u shtuan:
+
+- 18 mungesa në temperaturë.
+- 12 mungesa në reshje.
+- 6 vlera tekstuale të pavlefshme në temperaturë.
+- 12 rreshta të dublikuar.
+
+Për riprodhueshmëri u përdor fara fikse 42.
+
+### 6.2 Heqja e dublimeve
+
+Kopja didaktike kishte fillimisht 743 rreshta.
+
+Dublimet u identifikuan me `duplicated()` dhe u hoqën me `drop_duplicates()`.
+
+Pas këtij procesi mbetën 731 rreshta unikë.
+
+### 6.3 Trajtimi i mungesave
+
+Fillimisht kishte 30 qeliza bosh në variablat meteorologjike.
+
+Pas konvertimit të vlerave tekstuale të pavlefshme në `NaN`, numri i mungesave u rrit në 36.
+
+Vlerat që mungonin u trajtuan nëpërmjet `SimpleImputer`, duke përdorur medianën e mësuar vetëm nga të dhënat e trajnimit.
+
+Kjo metodë shmang përdorimin e informacionit nga periudhat e validimit dhe testimit gjatë përgatitjes së modelit.
+
+### 6.4 Krijimi i variablave historike
+
+Për të mundësuar parashikimin, u krijuan variabla që përfaqësojnë informacionin e ditëve të mëparshme.
+
+Për shkak të nevojës për histori shtatëditore, shtatë regjistrimet e para nuk mund të përdoren për modelim.
+
+Dataset-i përfundimtar `model_data.csv` përmban **724 rreshta**.
+
+## 7. ANALIZA EKSPLORUESE DHE VIZUALIZIMI
+
+Analiza eksploruese u realizua vetëm mbi periudhën e trajnimit, për të shmangur ndikimin e të dhënave të testimit në vendimet e modelimit.
+
+### 7.1 Evolucioni i kërkesës
+
+Grafiku `01_demand.png` tregon se kërkesa për biçikleta ndryshon sipas periudhës së vitit.
+
+Në fillim të vitit 2011, kërkesa ishte rreth 1000–2000 qira në ditë. Gjatë verës u rrit në rreth 4000–5000 qira, ndërsa në dimër pati rënie.
+
+Në pranverën e vitit 2012 u regjistruan përsëri rritje, në disa raste mbi 6000 qira ditore.
+
+Ky vëzhgim sugjeron praninë e sezonalitetit dhe të një tendence të përgjithshme rritëse.
+
+### 7.2 Ndikimi i temperaturës
+
+Grafiku `03_weather.png` paraqet lidhjen ndërmjet temperaturës së shtatë ditëve më parë dhe numrit të qirave.
+
+Korrelacioni në periudhën e trajnimit është rreth **0.54**, duke treguar një lidhje pozitive mes këtyre variablave.
+
+Megjithatë, kjo lidhje nuk provon se temperatura është shkaku i drejtpërdrejtë i ndryshimeve në kërkesë. Faktorë si stina dhe zhvillimi i sistemit të biçikletave mund të ndikojnë gjithashtu.
+
+### 7.3 Ditët e punës dhe ditët e pushimit
+
+Grafiku `02_workingday.png` paraqet krahasimin e kërkesës sipas llojit të ditës.
+
+Mesatarja e qirave është:
+
+- Ditë pune: 3761 qira.
+- Fundjavë ose festë: 3570 qira.
+
+Diferenca është afërsisht 5%, çka tregon se lloji i ditës ka një lidhje me kërkesën, por nuk e shpjegon i vetëm ndryshueshmërinë e saj.
+
+## 8. NDARJA E TË DHËNAVE
+
+Për shkak se të dhënat kanë renditje kohore, ndarja u realizua në mënyrë kronologjike.
+
+| Periudha | Intervali | Regjistrime |
+|---|---|---:|
+| Train | 08.01.2011 – 30.04.2012 | 479 |
+| Validation | 01.05.2012 – 31.08.2012 | 123 |
+| Test | 01.09.2012 – 31.12.2012 | 122 |
+
+Periudha train përdoret për mësimin e parametrave të modelit.
+
+Periudha validation përdoret për krahasimin dhe përzgjedhjen e modelit.
+
+Periudha test përdoret për vlerësimin përfundimtar mbi të dhëna të papërdorura gjatë trajnimit.
+
+Kjo ndarje është më e përshtatshme për parashikimin kohor sesa një ndarje e rastësishme e regjistrimeve.
+
+## 9. MODELET E MACHINE LEARNING
+
+### 9.1 Modelet krahasuese
+
+Për të vlerësuar performancën, u përdorën katër modele:
+
+**Yesterday:** parashikon që kërkesa e ditës së synuar do të jetë e barabartë me kërkesën e ditës së mëparshme.
+
+**DummyMean:** përdor një parashikim konstant të bazuar në mesataren e trajnimit.
+
+**Ridge Regression:** model linear me rregullim, që mëson marrëdhënien ndërmjet variablave hyrëse dhe kërkesës ditore.
+
+**Random Forest:** model që kombinon disa pemë vendimmarrjeje për të prodhuar parashikime.
+
+### 9.2 Rezultatet e regresionit
 
 | Modeli | Validation MAE | Test MAE | Test RMSE | Test R² |
 |---|---:|---:|---:|---:|
 | Yesterday | 775.203 | 916.402 | 1330.386 | 0.539 |
 | DummyMean | 2953.866 | 2494.628 | 2790.064 | -1.027 |
 | Ridge | 687.558 | 893.251 | 1252.655 | 0.591 |
-| RandomForest | 1821.528 | 1671.499 | 2042.654 | -0.087 |
+| Random Forest | 1821.528 | 1671.499 | 2042.654 | -0.087 |
 
-Modeli i zgjedhur nga validation dhe arsyeja: Ridge (alpha = 10), sepse ka MAE-n më të ulët në validation (687.558) midis dy kandidatëve të Machine Learning (Ridge dhe Random Forest). Zgjedhja u bë me validation, përpara se të interpretohej testi. Ridge është modeli linear me rregullim; në këtë problem ai mëson një lidhje të thjeshtë midis historisë së qirave, motit dhe kalendarit.
+### 9.3 Përzgjedhja e modelit
 
-Rezultati i provës me Random Forest: Random Forest doli më keq se Ridge dhe më keq edhe se baseline-i "Yesterday" (MAE në test 1671.499 kundrejt 893.251 dhe 916.402). Pra një model më kompleks nuk dha përmirësim në këtë konfigurim. Një shpjegim i mundshëm, që nuk e kemi testuar, është se pemët nuk e vazhdojnë prirjen rritëse që kërkon një periudhë e re. Rezultati dokumentohet siç është.
+Modeli i përzgjedhur është **Ridge Regression**, me parametrin `alpha = 10`.
 
-Interpretimi i gabimit në qira për ditë: Ridge gabon mesatarisht 893 qira në ditë në test, rreth 15.7% e mesatares së testit (5687 qira/ditë). Kundrejt baseline-it "Yesterday" (916 qira) përmirësimi është rreth 2.5%. Kjo është diferencë përshkruese në këtë ndarje dhe nuk provon domethënie statistikore. RMSE (1253) është më i lartë se MAE, që tregon disa gabime shumë të mëdha. Më i madhi ndodh më 2012-10-29, kur qiratë reale ishin 22, ndërsa Ridge parashikoi rreth 5737; edhe 2012-10-30 ka gabim të madh. Këto ditë përputhen me Uraganin Sandy, të përmendur në Readme-n e UCI; modeli nuk e njeh një ngjarje të tillë. R² është 0.591 në test, por vetëm 0.018 në validation, kështu që performanca nuk është e qëndrueshme në çdo periudhë.
+Ai arriti MAE më të ulët në validation ndërmjet dy modeleve të Machine Learning.
 
-Rezultati i klasifikimit, nëse u realizua: Po. Kërkesa quhet e lartë (`E lartë`) kur `rentals` ≥ medianës së train, që është 3907 qira. Pragu mësohet vetëm nga train dhe është rregull mësimor. Testi ka 103 ditë të larta dhe 19 normale.
+Në periudhën test, Ridge arriti:
 
-| Modeli | Accuracy | Balanced accuracy | Macro-F1 |
+- MAE: 893.251 qira në ditë.
+- RMSE: 1252.655 qira në ditë.
+- R²: 0.591.
+
+Krahasuar me modelin Yesterday, Ridge e uli MAE në test me rreth 2.5%.
+
+Ky është një përmirësim relativisht i vogël, ndaj rezultatet duhet të interpretohen me kujdes.
+
+### 9.4 Interpretimi i gabimit
+
+Vlera MAE prej rreth 893 tregon se, në periudhën test, diferenca absolute ndërmjet parashikimit dhe kërkesës reale ishte mesatarisht 893 qira në ditë.
+
+RMSE më i lartë tregon praninë e disa gabimeve veçanërisht të mëdha.
+
+Një rast domethënës ndodhi më 29 tetor 2012, kur numri real i qirave ishte vetëm 22, ndërsa modeli parashikoi rreth 5737.
+
+Kjo periudhë përkon me Uraganin Sandy, një ngjarje ekstreme që nuk përfaqësohet në mënyrë të mjaftueshme nga variablat hyrëse të modelit.
+
+Rezultati tregon se modeli mund të ketë vështirësi në situata të pazakonta.
+
+Gjithashtu, R² prej 0.018 në validation, krahasuar me 0.591 në test, tregon se performanca nuk është e qëndrueshme në të gjitha periudhat.
+
+## 10. KLASIFIKIMI I KËRKESËS
+
+Përveç regresionit, projekti përfshin një detyrë klasifikimi binar.
+
+Qëllimi është të përcaktohet nëse kërkesa për biçikleta është normale apo e lartë.
+
+Pragu është përcaktuar sipas medianës së periudhës train:
+
+**Kërkesë e lartë: rentals ≥ 3907.**
+
+Në periudhën test, 103 ditë klasifikohen si ditë me kërkesë të lartë dhe 19 si ditë normale.
+
+### 10.1 Modelet e përdorura
+
+- DummyMostFrequent.
+- Logistic Regression.
+
+### 10.2 Rezultatet e klasifikimit
+
+| Modeli | Accuracy | Balanced Accuracy | Macro-F1 |
 |---|---:|---:|---:|
 | DummyMostFrequent | 84.43% | 50.00% | 0.458 |
-| LogisticRegression | 91.80% | 77.98% | 0.820 |
+| Logistic Regression | 91.80% | 77.98% | 0.820 |
 
-Matrica e konfuzionit e testit për LogisticRegression është [[11, 8], [2, 101]] (`reports/figures/05_confusion.png`): 8 ditë normale u parashikuan të larta dhe 2 ditë të larta u parashikuan normale. Baseline-i merr accuracy 84.43% vetëm sepse thotë gjithmonë "e lartë", pa dalluar asnjë ditë normale (balanced accuracy 50%), prandaj accuracy duhet lexuar bashkë me metrikat tjera.
+Modeli Logistic Regression arriti performancë më të mirë në metrikat e vlerësimit.
 
-## Kufizimet
+Matrica e konfuzionit për testin është:
 
-1. Të dhënat vijnë nga një qytet (Washington, D.C.) dhe nga periudha historike 2011–2012; rezultati nuk provon se modeli vlen për qytete të tjera ose për vite të tjera.
-2. Moti NASA vjen nga një rrjet meteorologjik (jo nga stacioni i sistemit të qirave) dhe me standard kohor LST. Përdorimi i motit të 7 ditëve më parë (lag7) nuk zgjidh çdo kufizim të të dhënave historike dhe nuk është parashikim meteorologjik.
-3. Parashikimi njëditor supozon se qiratë e ditës së djeshme njihen. Aplikacioni është një demonstrim historik për datat e testit dhe nuk është shërbim i testuar për kërkesën e sotme.
+`[[11, 8], [2, 101]]`
 
-## Kontributet individuale
+Kjo tregon se modeli klasifikoi gabimisht tetë ditë normale si ditë me kërkesë të lartë dhe dy ditë me kërkesë të lartë si ditë normale.
 
-<!-- Plotëso me fjalët e tua, vetëm atë që ke bërë ti vërtet. Shiko udhëzimet e pedagogut për përdorimin e mjeteve të AI-së dhe shkruaj ndershmërisht si u përdorën. -->
+Rezultati demonstron rëndësinë e përdorimit të disa metrikave, pasi accuracy e lartë nuk garanton domosdoshmërisht performancë të balancuar ndërmjet klasave.
 
-| Studenti | Skedari/ekrani | Puna dhe vendimi | Commit/prova |
-|---|---|---|---|
-| [PLOTËSO] | [p.sh. 03_train.py] | [PLOTËSO] | [PLOTËSO] |
-| | | | |
-| | | | |
+## 11. ZHVILLIMI I APLIKACIONIT URBANBIKE AI
 
-## Burimet
+### 11.1 Struktura e sistemit
 
-UCI: https://doi.org/10.24432/C5W894
-NASA: https://power.larc.nasa.gov/docs/services/api/temporal/daily/
-Provenienca lokale: data/raw/provenance.json
+Aplikacioni përbëhet nga dy pjesë kryesore:
+
+**Backend:** implementuar në Python, përgjegjës për komunikimin me modelin e trajnuar, përpunimin e kërkesave dhe kthimin e rezultateve.
+
+**Frontend:** implementuar me React dhe TypeScript, përgjegjës për ndërfaqen grafike dhe paraqitjen e informacionit.
+
+### 11.2 Ndërfaqja grafike
+
+Koncepti vizual i aplikacionit është realizuar me Figma Make dhe është integruar në projektin lokal.
+
+Ndërfaqja synon të paraqesë informacionin në mënyrë të kuptueshme, duke përfshirë përzgjedhjen e datës, rezultatet e parashikimit dhe vizualizimet përkatëse.
+
+Dizajni përdor një stil modern dashboard-i, me elemente vizuale të organizuara për të lehtësuar interpretimin e rezultateve.
+
+### 11.3 Integrimi i frontend-it me backend-in
+
+Gjatë integrimit, aplikacioni frontend komunikon me API-në Python përmes kërkesave HTTP.
+
+Në mjedisin lokal, backend-i përdor adresën:
+
+`http://127.0.0.1:8001`
+
+Ndërsa frontend-i ekzekutohet përmes Vite në:
+
+`http://127.0.0.1:5173`
+
+Gjatë testimit u identifikua një problem komunikimi kur backend-i nuk ishte aktiv njëkohësisht me frontend-in.
+
+Problemi u zgjidh duke ekzekutuar të dy serverët paralelisht dhe duke verifikuar komunikimin me API-në.
+
+### 11.4 Demonstrimi i parashikimit
+
+Për datën 01.09.2012, rezultatet e provës së modelit përfshijnë:
+
+| Treguesi | Vlera |
+|---|---:|
+| Data | 01.09.2012 |
+| Parashikimi Ridge | 6834.73 |
+| Qiratë reale | 6140 |
+| Gabimi absolut | 694.73 |
+
+Ky shembull demonstron mënyrën se si parashikimi mund të krahasohet me një vlerë reale historike.
+
+## 12. TESTIMI DHE VERIFIKIMI
+
+Gjatë punës me projektin u kryen kontrolle për funksionimin e mjedisit lokal dhe integrimin e komponentëve.
+
+Testimi përfshiu:
+
+- Ekzekutimin e backend-it Python.
+- Kontrollin e përgjigjes së API-së.
+- Ekzekutimin e frontend-it React.
+- Verifikimin e komunikimit ndërmjet komponentëve.
+- Kontrollin e shfaqjes së ndërfaqes.
+- Testimin e parashikimit për një datë historike.
+- Ekzekutimin e testeve të integrimit.
+
+Testet e integrimit raportuan përfundim me sukses në mjedisin lokal.
+
+Ky verifikim nuk zëvendëson testimin e plotë të sistemit në një mjedis publik prodhimi.
+
+## 13. KUFIZIMET E PROJEKTIT
+
+Megjithëse UrbanBike AI demonstron përdorimin e Machine Learning për parashikimin e kërkesës, ai ka disa kufizime.
+
+**Kufizimi gjeografik:** të dhënat i përkasin vetëm Washington, D.C. Rezultatet nuk mund të përgjithësohen automatikisht në qytete të tjera.
+
+**Kufizimi kohor:** dataset-i përfshin vitet 2011–2012 dhe nuk pasqyron domosdoshmërisht sjelljen aktuale të përdoruesve.
+
+**Kufizimi meteorologjik:** modeli përdor të dhëna historike të motit dhe jo një parashikim të drejtpërdrejtë meteorologjik për ditën e synuar.
+
+**Ngjarjet e jashtëzakonshme:** situata si uraganet, ndërprerjet e shërbimit apo ngjarjet e mëdha publike mund të ndikojnë ndjeshëm në kërkesë pa u përfaqësuar nga variablat e modelit.
+
+**Performanca:** përmirësimi i Ridge kundrejt baseline-it Yesterday është relativisht i vogël dhe performanca ndryshon sipas periudhës.
+
+**Mjedisi i ekzekutimit:** aplikacioni është testuar lokalisht dhe nuk përbën një sistem prodhimi të publikuar online.
+
+## 14. KONTRIBUTI INDIVIDUAL
+
+Kontributi im në projekt u përqendrua te organizimi i mjedisit të zhvillimit, konfigurimi i mjeteve, integrimi i komponentëve, testimi i aplikacionit dhe publikimi i projektit në GitHub.
+
+Gjatë punës përdora Visual Studio Code për të hapur dhe menaxhuar strukturën e projektit, si dhe terminalin PowerShell për të ekzekutuar komandat e nevojshme.
+
+Në pjesën e ndërfaqes grafike përdora Figma Make për krijimin e konceptit vizual dhe punova me projektin e integruar React.
+
+Një nga problemet teknike të hasura ishte komunikimi ndërmjet frontend-it dhe backend-it. Nëpërmjet kontrollit të mesazheve të gabimit dhe ekzekutimit të serverëve paralelisht, verifikova funksionimin e aplikacionit në mjedisin lokal.
+
+Gjithashtu, instalova dhe konfigurova Git, inicializova repository-n lokal, realizova commit-in fillestar dhe publikova skedarët e projektit në GitHub.
+
+| Komponenti | Kontributi | Prova |
+|---|---|---|
+| VS Code | Organizimi dhe konfigurimi i mjedisit lokal | Struktura e projektit |
+| Figma Make | Koncepti vizual i dashboard-it | Linku Figma |
+| Frontend / Backend | Integrimi dhe testimi i komunikimit | Aplikacioni lokal |
+| API Python | Verifikimi i përgjigjes së serverit | `/api/health` |
+| Testimi | Ekzekutimi dhe kontrolli i testeve të integrimit | `test_integration.py` |
+| GitHub | Versionimi dhe publikimi i projektit | Commit-i fillestar |
+
+### 14.1 Përdorimi i mjeteve të Inteligjencës Artificiale
+
+Gjatë realizimit të projektit u përdorën mjete gjeneruese të Inteligjencës Artificiale, përfshirë Claude dhe ChatGPT, për asistencë në përgatitjen dhe integrimin e kodit, interpretimin e gabimeve teknike dhe shpjegimin e hapave të konfigurimit.
+
+Figma Make u përdor për gjenerimin e konceptit vizual dhe elementeve të ndërfaqes.
+
+Përdorimi i këtyre mjeteve shërbeu si mbështetje në procesin e zhvillimit. Kodi dhe komponentët e gjeneruar me AI nuk paraqiten si të shkruar tërësisht në mënyrë manuale.
+
+Kontributi im praktik përfshiu konfigurimin e mjedisit, zbatimin e hapave të integrimit, ekzekutimin dhe testimin e aplikacionit, zgjidhjen e problemeve të konfigurimit dhe publikimin e rezultatit.
+
+## 15. PËRFUNDIME
+
+Projekti UrbanBike AI demonstron një proces të plotë akademik të përdorimit të Inteligjencës Artificiale për analizimin dhe parashikimin e kërkesës për biçikleta.
+
+Nga analiza e të dhënave u identifikuan lidhje ndërmjet kërkesës, sezonalitetit, historikut të qirave dhe karakteristikave meteorologjike.
+
+Në krahasimin e modeleve të regresionit, Ridge Regression dha rezultatet më të mira ndërmjet modeleve të Machine Learning të testuara, me MAE prej 893.251 qira në ditë dhe R² prej 0.591 në periudhën test.
+
+Në detyrën e klasifikimit, Logistic Regression arriti accuracy prej 91.80% dhe Macro-F1 prej 0.820.
+
+Rezultatet tregojnë se algoritmet e Machine Learning mund të identifikojnë marrëdhënie të dobishme në të dhënat historike, por gjithashtu evidentojnë vështirësi në rastin e ngjarjeve ekstreme dhe ndryshimeve kohore.
+
+Integrimi i modelit me një ndërfaqe grafike e bën projektin më të kuptueshëm dhe demonstron mënyrën se si një analizë e të dhënave mund të paraqitet në formën e një aplikacioni interaktiv.
+
+Në përfundim, UrbanBike AI përfaqëson një projekt mësimor që lidh përpunimin e të dhënave, Machine Learning, zhvillimin e aplikacioneve dhe dokumentimin teknik.
+
+## 16. BURIMET DHE REFERENCAT
+
+**UCI Machine Learning Repository – Bike Sharing Dataset**
+
+https://doi.org/10.24432/C5W894
+
+**NASA POWER – Daily API Documentation**
+
+https://power.larc.nasa.gov/docs/services/api/temporal/daily/
+
+**Dokumentacioni i proveniencës së të dhënave**
+
+`data/raw/provenance.json`
+
+**Repository i projektit në GitHub**
+
+https://github.com/fabiolahoxhallari/UrbanBike-AI
+
+**Koncepti grafik në Figma Make**
+
+https://www.figma.com/make/accrfVOHPwpXQgrudI3nQ4/UrbanBike-AI-Dashboard
+
+---
+
+**FUND I RAPORTIT**
